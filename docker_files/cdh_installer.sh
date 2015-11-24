@@ -54,7 +54,7 @@ service zookeeper-server init || die "Unable to init zookeeper-server"
 service zookeeper-server start || die "Unable to start zookeeper-server"
 service zookeeper-server stop || die "Unable to stop zookeeper-server"
 
-apt-get -y install hadoop-conf-pseudo impala impala-server impala-state-store impala-catalog impala-shell || die
+apt-get -y install hadoop-conf-pseudo || die
 
 #CDH5-Installation-Guide Step 1 - Format the NameNode
 echo "Step 1 - Format the NameNode"
@@ -107,42 +107,7 @@ sudo -E -u hdfs hdfs dfs -chown hdh /HDH || die "Unable to change owner of HDFS 
 #CDH5-Installation-Guide Install HBase
 echo "Install Cloudera Components"
 #apt-get -y install hadoop-kms hadoop-kms-server hive hbase hbase-thrift hbase-master pig hue oozie oozie-client spark-core spark-master spark-worker spark-history-server spark-python || die
-apt-get -y install hadoop-kms hadoop-kms-server hive hbase hbase-thrift hbase-master hbase-regionserver pig hue oozie oozie-client || die
-
-#Use standalone Zookeeper
-echo "export HBASE_MANAGES_ZK=true" >> /etc/hbase/conf.dist/hbase-env.sh
-
-#Configure Oozie
-update-alternatives --set oozie-tomcat-conf /etc/oozie/tomcat-conf.http || die
-sudo -E -u hdfs hadoop fs -chown oozie:oozie /user/oozie || die
-sudo oozie-setup sharelib create -fs hdfs://localhost -locallib /usr/lib/oozie/oozie-sharelib-yarn || die
-#Initiate Oozie Database
-oozie-setup db create -run || die
-
-
-#Create HUE Secret Key
-sed -i 's/secret_key=/secret_key=_S@s+D=h;B,s$C%k#H!dMjPmEsSaJR/g' /etc/hue/conf/hue.ini || die
-
-apt-get -y install solr-server hue-search
-sudo -E -u hdfs hadoop fs -mkdir -p /solr
-sudo -E -u hdfs hadoop fs -chown solr /solr
-mv /etc/default/solr.docker /etc/default/solr
-service hbase-master start || die
-solrctl init
-
-# Install Kafka per https://www.digitalocean.com/community/tutorials/how-to-install-apache-kafka-on-ubuntu-14-04
-echo "Install Kafka"
-useradd kafka -m || die
-echo "kafka:kafka" | chpasswd  || die # Note, this is not secure
-adduser kafka sudo || die
-
-KAFKA_HOME=/home/kafka
-sudo -E -u kafka mkdir -p ${KAFKA_HOME}/Downloads || die
-sudo -E -u kafka wget "http://mirror.cc.columbia.edu/pub/software/apache/kafka/0.8.2.1/kafka_2.10-0.8.2.1.tgz" -O ${KAFKA_HOME}/Downloads/kafka.tgz || die
-sudo -E -u kafka mkdir -p ${KAFKA_HOME}/kafka || die
-sudo -E -u kafka tar --strip 1 -xvzf ${KAFKA_HOME}/Downloads/kafka.tgz -C ${KAFKA_HOME}/kafka || die
-sudo -E -u kafka echo "auto.create.topics.enable = true" >> ${KAFKA_HOME}/kafka/config/server.properties || die
-sudo -E -u kafka echo "delete.topic.enable = true" >> ${KAFKA_HOME}/kafka/config/server.properties || die
+apt-get -y install hadoop-kms hadoop-kms-server hive || die
 
 echo "Install Spark"
 apt-get -y install spark-core spark-master spark-worker spark-history-server spark-python || die
